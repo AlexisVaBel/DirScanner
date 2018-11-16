@@ -10,84 +10,66 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 /**
  * Created by Belyaev Alexei (lebllex) on 14.11.18.
  */
-public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmdService<List<String>,ArrayList<? super FileModel>>, Iterable<String>{
+public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmdService<List<String>,TreeSet<FileModel>>{
 
     private final PathMatcher matcher;
     private final DateFormat  formatter;
 
-    private List<String>      lstCmds;
-    private boolean           bSkipSubtree;
+    private List<String>      incLst;
+    private List<String>      excLst;
+    private String            strPath;
 
     // data container
-    ArrayList<FileModel> lstContainer;
+    private TreeSet<FileModel> treeContainer;
 
 
     public FilesExploreService(){
-        formatter    = new SimpleDateFormat("yyyy.MM.dd");
-        matcher      = FileSystems.getDefault().getPathMatcher("glob:"+"*");
-        bSkipSubtree = false;
-        lstContainer = new ArrayList<>();
+        formatter     = new SimpleDateFormat("yyyy.MM.dd");
+        matcher       = FileSystems.getDefault().getPathMatcher("glob:"+"*");
+        treeContainer = new TreeSet<>();
     }
 
     @Override
     public void setCmdList(List<String> cmds) {
-        // need first prepare what to skip or not
-        lstCmds=cmds;
+        incLst = cmds;
+        strPath = incLst.get(0); // костыль, надо переделать
     }
 
     @Override
-    public ArrayList<? super FileModel> getResults() {
-        return lstContainer;
+    public void setFilterList(List<String> cmds) {
+        excLst = cmds;
     }
+
 
     @Override
-    public boolean isFinished() {
-        return false;
+    public TreeSet<FileModel> getResults(){
+        try {
+            Files.walkFileTree(Paths.get(strPath), this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return treeContainer;
     }
 
-    @Override
-    public void run() {
-        for(String cmd:lstCmds)
-            try {
-                Files.walkFileTree(Paths.get(cmd), this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-    }
 
-    @Override
-    public Iterator<String> iterator() {
-        return null;
-    }
 
-//    @Benchmark - not used now, maybe next after
     void getFileInfo(Path fpath, FileTime ftime, long size){
         Path path = fpath.getFileName();
         if(path != null && matcher.matches(path)){
-            synchronized (lstContainer){
-                lstContainer.add(new FileModel(fpath.toString(),formatter.format(ftime.toMillis()),new Long(size).toString()));
-            }
+                treeContainer.add(new FileModel(fpath.toString(),formatter.format(ftime.toMillis()),new Long(size).toString()));
         }
     }
 
     @Override
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        Thread thr = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getFileInfo(file, attrs.creationTime(), attrs.size());
-            }
-        });
-        thr.start();
+        getFileInfo(file, attrs.creationTime(), attrs.size());
         return  CONTINUE;
     }
 
@@ -99,9 +81,8 @@ public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmd
 
     @Override
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-//        if(bSkipSubtree)
-//            return SKIP_SUBTREE; // this place to dicide if continue, than will get subdirs fileszzzz
-//        bSkipSubtree = true;
+        for(String strExl: excLst)
+            if(dir.toString().compareTo(strExl)==0)return SKIP_SUBTREE;
         return CONTINUE;
     }
 

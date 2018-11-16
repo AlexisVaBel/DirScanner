@@ -1,16 +1,12 @@
 package com.dirscanner;
 
-import com.dirscanner.model.FileModel;
-import com.dirscanner.service.FilesExploreService;
-import com.dirscanner.service.ICmdService;
-import com.dirscanner.service.ResultMaker;
-import com.dirscanner.service.TerminalNotBoring;
+import com.dirscanner.controller.InputCmdsController;
+import com.dirscanner.exception.EmptyCommandListException;
+import com.dirscanner.exception.NoCommandSvcExcpetion;
+import com.dirscanner.service.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+
 import java.util.Arrays;
-import java.util.List;
 import java.util.Timer;
 
 /**
@@ -19,34 +15,36 @@ import java.util.Timer;
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         if(args.length < 1){
+            // не тратим ничье время - без параметров не работаем.
             System.out.println("not enough actual parameters");
+            System.out.println("use  /path1/toDir to include");
+            System.out.println("use -/path2/toDir to exclude");
         }else {
-
-
-            TerminalNotBoring termNotBoring = new TerminalNotBoring();
-
-            ICmdService cmd =  new FilesExploreService();
-            Thread thr = new Thread(cmd);
-            cmd.setCmdList(Arrays.asList(args));
-            thr.start();
+            long curTime = System.currentTimeMillis();
+            System.out.println("starting process");
+            // таймер по расписанию будет вызывать метод, объекта, что приложение живо
+            TermNotBoringService termNotBoring = new TermNotBoringService();
             Timer timer = new Timer(true);
-            timer.scheduleAtFixedRate(termNotBoring,0,5*1000);
 
-            thr.join();
-            timer.cancel();
-
-            List<FileModel> lst = (List<FileModel>) cmd.getResults();
-            System.out.println("process finished");
             try {
-                ResultMaker resultmaker = new ResultMaker("");
-                resultmaker.setWriteData(lst);
-            } catch (FileNotFoundException e) {
+                InputCmdsController cmdController = new InputCmdsController(Arrays.asList(args));
+                //контроллер пойдет своим потоком
+                Thread thr = new Thread(cmdController);
+                thr.start();
+                timer.scheduleAtFixedRate(termNotBoring,0,5*1000);
+                // пока контроллер не закончит работу ждем
+                thr.join();
+            } catch (EmptyCommandListException e) {
                 e.printStackTrace();
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (NoCommandSvcExcpetion noCommandSvcExcpetion) {
+                noCommandSvcExcpetion.printStackTrace();
+            }finally {
+                timer.cancel();
             }
+            timer.cancel();
+            long lastTime = System.currentTimeMillis();
+            System.out.printf("total time procs: %d millis\n",lastTime-curTime);
+            System.out.println("process finished");
         }
     }
 }

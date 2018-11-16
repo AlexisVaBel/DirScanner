@@ -5,10 +5,10 @@ import java.util.TimerTask;
 /**
  * Created by Belyaev Alexei (lebllex) on 15.11.18.
  */
-public class TerminalNotBoring extends TimerTask {
+public class TermNotBoringService extends TimerTask {
     private int iSelfTick;
 
-    public TerminalNotBoring(){
+    public TermNotBoringService(){
         iSelfTick = 0;
     }
 

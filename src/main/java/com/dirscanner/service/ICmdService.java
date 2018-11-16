@@ -1,13 +1,13 @@
 package com.dirscanner.service;
 
+import java.io.IOException;
+
 /**
  * Created by Belyaev Alexei (lebllex) on 14.11.18.
  */
-public interface ICmdService<T, E > extends Runnable{
+public interface ICmdService<T, E >{
     public void setCmdList(T cmds);
-    public E    getResults();
-    public boolean isFinished();
+    public void setFilterList(T cmds);
 
-    @Override
-    void run();
+    public E    getResults();
 }
