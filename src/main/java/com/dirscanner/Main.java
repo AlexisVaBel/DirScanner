@@ -1,8 +1,7 @@
 package com.dirscanner;
 
-import com.dirscanner.controller.InputCmdsController;
+import com.dirscanner.controller.BaseAppController;
 import com.dirscanner.exception.EmptyCommandListException;
-import com.dirscanner.exception.NoCommandSvcExcpetion;
 import com.dirscanner.service.*;
 
 
@@ -12,6 +11,7 @@ import java.util.Timer;
 /**
  * Created by Belyaev Alexei (lebllex) on 14.11.18.
  */
+
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         if(args.length < 1){
@@ -27,8 +27,8 @@ public class Main {
             Timer timer = new Timer(true);
 
             try {
-                InputCmdsController cmdController = new InputCmdsController(Arrays.asList(args));
                 //контроллер пойдет своим потоком
+                BaseAppController cmdController = new BaseAppController(Arrays.asList(args));
                 Thread thr = new Thread(cmdController);
                 thr.start();
                 timer.scheduleAtFixedRate(termNotBoring,0,5*1000);
@@ -36,9 +36,7 @@ public class Main {
                 thr.join();
             } catch (EmptyCommandListException e) {
                 e.printStackTrace();
-            } catch (NoCommandSvcExcpetion noCommandSvcExcpetion) {
-                noCommandSvcExcpetion.printStackTrace();
-            }finally {
+            } finally {
                 timer.cancel();
             }
             timer.cancel();

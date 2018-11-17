@@ -1,6 +1,7 @@
 package com.dirscanner.service;
 
-import com.dirscanner.model.FileModel;
+import com.dirscanner.model.FileModelByDateyyMMdd;
+import com.dirscanner.model.IDirFileModel;
 
 import static java.nio.file.FileVisitResult.*;
 
@@ -8,30 +9,28 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
 /**
  * Created by Belyaev Alexei (lebllex) on 14.11.18.
  */
-public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmdService<List<String>,TreeSet<FileModel>>{
+public class AllFilesExploreService extends SimpleFileVisitor<Path> implements ICmdService<List<String>,TreeSet<IDirFileModel>>{
 
-    private final PathMatcher matcher;
-    private final DateFormat  formatter;
+    private static PathMatcher matcher;
 
+    // список директорий для обработки
     private List<String>      incLst;
+    // общий список исключений
     private List<String>      excLst;
     private String            strPath;
 
     // data container
-    private TreeSet<FileModel> treeContainer;
+    private TreeSet<IDirFileModel> treeContainer;
 
 
-    public FilesExploreService(){
-        formatter     = new SimpleDateFormat("yyyy.MM.dd");
+    public AllFilesExploreService(){
+        // реализация под все файлы, в том числе символьные ссылки
         matcher       = FileSystems.getDefault().getPathMatcher("glob:"+"*");
         treeContainer = new TreeSet<>();
     }
@@ -39,7 +38,9 @@ public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmd
     @Override
     public void setCmdList(List<String> cmds) {
         incLst = cmds;
-        strPath = incLst.get(0); // костыль, надо переделать
+        // интерфейс позволяет работать со списком, но
+        // данная реализация работает только с одним элементом inclList
+        strPath = incLst.get(0);
     }
 
     @Override
@@ -49,8 +50,10 @@ public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmd
 
 
     @Override
-    public TreeSet<FileModel> getResults(){
+    public TreeSet<IDirFileModel> getResults(){
         try {
+            // по обходу всего дерева файлов
+            // получим заполненное дерево treeContainer
             Files.walkFileTree(Paths.get(strPath), this);
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,11 +62,16 @@ public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmd
     }
 
 
-
+    // забираем только оперделенные данные из файла
+    // путь, дату и время создания, размер
     void getFileInfo(Path fpath, FileTime ftime, long size){
         Path path = fpath.getFileName();
         if(path != null && matcher.matches(path)){
-                treeContainer.add(new FileModel(fpath.toString(),formatter.format(ftime.toMillis()),new Long(size).toString()));
+            // заложился на фильтр ненужных файлов
+            // все в одном exl листе
+            for(String strExl: excLst)
+                if(path.toString().compareTo(strExl)==0)return;
+            treeContainer.add(new FileModelByDateyyMMdd(fpath.toString(),ftime.toMillis(),new Long(size).toString()));
         }
     }
 
@@ -73,6 +81,7 @@ public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmd
         return  CONTINUE;
     }
 
+    // к примеру нет прав доступ к папке
     @Override
     public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
         System.err.println(exc);
@@ -81,6 +90,8 @@ public class FilesExploreService extends SimpleFileVisitor<Path> implements ICmd
 
     @Override
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        // применяем оставшийся фильтр
+        // если имееется, то к поддиректориям
         for(String strExl: excLst)
             if(dir.toString().compareTo(strExl)==0)return SKIP_SUBTREE;
         return CONTINUE;

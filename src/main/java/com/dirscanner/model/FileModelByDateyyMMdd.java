@@ -1,16 +1,25 @@
 package com.dirscanner.model;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 /**
  * Created by Belyaev Alexei (lebllex) on 15.11.18.
  */
-public class FileModel implements IDirFileModel {
+public class FileModelByDateyyMMdd implements IDirFileModel {
+    private static DateFormat formatter;
     private final String fileName;
     private final String fileDate;
     private final String fileSize;
 
-    public FileModel(String fName,String fDate,String fSize){
+
+    public FileModelByDateyyMMdd(String fName, long dt , String fSize){
+        // конкретна модель отличается способом представления данных о файле
+        // в том числе форматированием
+        // поэтому добавляем его в статик
+        this.formatter= new SimpleDateFormat("yyyy.MM.dd");
         this.fileName = fName;
-        this.fileDate = fDate;
+        this.fileDate = formatter.format(dt);
         this.fileSize = fSize;
     }
 
@@ -31,11 +40,9 @@ public class FileModel implements IDirFileModel {
 
     @Override
     public int compareTo(IDirFileModel that) {
+        // сортируем все по одному принципу
         if(that == null) return 1;
         if(this == that) return 0;
-        // need to check how to sort them
-        // in one directory by name and size?
-        // or???
         return (this.getName().compareTo(that.getName()));
     }
 }
