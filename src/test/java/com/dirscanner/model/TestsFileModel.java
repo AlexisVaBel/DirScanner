@@ -1,27 +1,25 @@
 package com.dirscanner.model;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.time.LocalDate;
-import java.util.Calendar;
-import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
+
 
 public class TestsFileModel {
     @Test
-    @DisplayName("/path2/file1")
-    void testFilePath(){
+
+    public void testFilePath(){
         FileModelByDateyyMMdd fmodel = new FileModelByDateyyMMdd("/path2/file1", LocalDate.of(2018,11,17).toEpochDay(), "115");
-        assertEquals(fmodel.getName(),"/path2/file1","should be /path2/file1");
+        assertEquals("should be /path2/file1","/path2/file1",fmodel.getName());
     }
 
     @Test
-    @DisplayName("115(Bytes)")
-    void testFileSize(){
+
+    public void testFileSize(){
         FileModelByDateyyMMdd fmodel = new FileModelByDateyyMMdd("/path2/file1", LocalDate.of(2018,11,17).toEpochDay(), "115");
-        assertEquals(fmodel.getSize(),"115","should be 115");
+        assertEquals("should be 115","115",fmodel.getSize());
     }
 
 //    @Test

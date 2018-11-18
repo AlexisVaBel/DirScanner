@@ -20,8 +20,9 @@ public class Main {
             System.out.println("use  /path1/toDir to include");
             System.out.println("use -/path2/toDir to exclude");
         }else {
-            long curTime = System.currentTimeMillis();
             System.out.println("starting process");
+            long curTime = System.currentTimeMillis();
+
             // таймер по расписанию будет вызывать метод, объекта, что приложение живо
             TermNotBoringService termNotBoring = new TermNotBoringService();
             Timer timer = new Timer(true);
@@ -31,7 +32,7 @@ public class Main {
                 BaseAppController cmdController = new BaseAppController(Arrays.asList(args));
                 Thread thr = new Thread(cmdController);
                 thr.start();
-                timer.scheduleAtFixedRate(termNotBoring,0,5*1000);
+                timer.scheduleAtFixedRate(termNotBoring,0,6*1000);
                 // пока контроллер не закончит работу ждем
                 thr.join();
             } catch (EmptyCommandListException e) {
@@ -42,7 +43,7 @@ public class Main {
             timer.cancel();
             long lastTime = System.currentTimeMillis();
             System.out.printf("total time procs: %d millis\n",lastTime-curTime);
-            System.out.println("process finished");
+            System.out.println("finishing process");
         }
     }
 }

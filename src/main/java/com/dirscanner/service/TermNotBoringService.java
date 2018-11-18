@@ -5,6 +5,7 @@ import java.util.TimerTask;
 /**
  * Created by Belyaev Alexei (lebllex) on 15.11.18.
  */
+// просто выводит точку или пайп в свое время
 public class TermNotBoringService extends TimerTask {
     private int iSelfTick;
 
@@ -12,7 +13,7 @@ public class TermNotBoringService extends TimerTask {
         iSelfTick = 0;
     }
 
-    public String getWait5Secs(){
+    public String getWait6Secs(){
         return ".";
     }
     public String getWaitMinute(){
@@ -21,12 +22,12 @@ public class TermNotBoringService extends TimerTask {
 
     @Override
     public void run() {
-        iSelfTick++;
-        if(iSelfTick == 12){
+        if(iSelfTick == 10){
             iSelfTick = 0;
             System.out.print("|");
         }else{
             System.out.print(".");
         }
+        iSelfTick++;
     }
 }

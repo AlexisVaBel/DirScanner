@@ -15,6 +15,11 @@ import java.util.TreeSet;
 /**
  * Created by Belyaev Alexei (lebllex) on 14.11.18.
  */
+
+// SimpleFileVisitor самое простое решение для данной задачи
+// позволяет обойти все дерево файлов, включая символьные ссылки
+// задействовать фильтр
+// выводит ошибки связанные с уровнем прав доступа
 public class AllFilesExploreService extends SimpleFileVisitor<Path> implements ICmdService<List<String>,TreeSet<IDirFileModel>>{
 
     private static PathMatcher matcher;

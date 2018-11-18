@@ -7,11 +7,13 @@ import java.io.*;
 /**
  * Created by Belyaev Alexei (lebllex) on 15.11.18.
  */
+// реализация сервиса вывода обработки директорий
+// пишем либо в defaultfile, либо в переданное имя
 public class ResultToFileService implements IResultService {
     private static Writer writer;
 
     public ResultToFileService(String fname,String charset) throws FileNotFoundException, UnsupportedEncodingException {
-        // упущение, кодировку лучше бы укзать в конструкторе
+
         String name;
         if(fname != null && !fname.isEmpty()) name = fname;
         else name = "defaultfile";

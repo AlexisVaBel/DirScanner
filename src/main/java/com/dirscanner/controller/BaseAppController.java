@@ -20,11 +20,21 @@ public class BaseAppController extends Thread{
     // параметры команд
     private static final String CMD_EXCL = "-";
     private static final String CMD_FOUTNAME = "-FN";
+    private static final String CMD_SVCNAME = "-SVC";
+    private static final String CMD_FRMTNAME = "-FMRT";
+
     //~ параметры команд
 
+    // по сути неважно в каком порядке обрабатывать список
+    // главное чтобы он был вообще был обработан
     private List<String> incLst;
     private List<String> excLst;
     private static List<String> lstCmds;
+
+    // всю остальную работу на себя возьмет данное хранилище
+    // сортировка, а также отсутствие привязки к размеру множества файлов
+    // минусы в затратах времени на балансировку дерева
+    // про сортировку знает реализация IDIrFileModel
     private TreeSet<IDirFileModel> treeFiles;
 
     //
@@ -44,7 +54,7 @@ public class BaseAppController extends Thread{
     }
 
     public boolean canProcess(){
-        if(!lstCmds.isEmpty()){ // в конструкторе озаботился не null командой
+        if(!lstCmds.isEmpty()){
             return makeIncsExcls();
         }else
         return false;
@@ -53,11 +63,29 @@ public class BaseAppController extends Thread{
     private boolean makeIncsExcls(){
         boolean bFlagExcl = false;
         boolean bFileName = false;
+        boolean bSvcName  = false;
+        boolean bFrmtName = false;
         String fileName = "";
+        String svcName = "";
+        String frmtName = "";
+        
+        CmdArgsOptions argOptions = new CmdArgsOptions();
+        // лапша из параметров и их обработки, можно было бы поиграть с Options от  Appache
+        // но appache не java se и не junit - значит нельзя
         for(String str: lstCmds){
             if(bFileName){
                 fileName  = str;
                 bFileName = false;
+                continue;
+            };
+            if(bSvcName){
+                svcName  = str;
+                bSvcName = false;
+                continue;
+            }
+            if(bFrmtName){
+                frmtName  = str;
+                bFrmtName = false;
                 continue;
             }
             if(str.equals(CMD_EXCL)){
@@ -68,32 +96,36 @@ public class BaseAppController extends Thread{
                 bFileName = true;
                 continue;
             }
+            if(str.equals(CMD_SVCNAME)){
+                bSvcName = true;
+                continue;
+            }
+            if(str.equals(CMD_FRMTNAME)){
+                bFrmtName = true;
+                continue;
+            }
             if(bFlagExcl){
                 if(!incLst.remove(str))excLst.add(str); // если нет данного элемента в incl, вероятно excl элемент может быть сабдиром
             }
-            else if(!incLst.contains(str)) incLst.add(str); // избавимся от повторов
+            else if(!incLst.contains(str)) incLst.add(str); // избавимся от повторов, могут случайно быть набраны
         }
         // реализации по умолчанию, в парамертах предполагается указние иного (вывод в терминал, другой форматировщик)
-        this.resultSvc = ResultFactory.getResultService("",new String[]{fileName,"UTF-8"});
+        this.resultSvc = ResultFactory.getResultService(svcName,new String[]{fileName,"UTF-8"});
 
-        this.resultFormatter = OutFormatterFactory.getFormatter("");
+        this.resultFormatter = OutFormatterFactory.getFormatter(frmtName);
 
-        System.out.println("Total include list "+incLst);
-        System.out.println("Total exclude exclude "+excLst);
-        return (!incLst.isEmpty() && resultSvc !=null); // без excl работать можно
+        return (!incLst.isEmpty() && resultSvc !=null && resultFormatter != null); // без excl работать можно
     };
 
     @Override
     public void run() {
         if(canProcess()){
-            System.out.println("Starting cmds thread process ");
             int iThrCnt = Runtime.getRuntime().availableProcessors();
             //определим пул процессов
             ExecutorService threadPool = Executors.newFixedThreadPool(iThrCnt);
 
-            // хотя спорный момент что не нужно именно завершение в определенном порядке
-            // ведь дереву требуется время для балансировки
 
+            // список объектов, что вернут нам свое дерево файлов
             List<Future<TreeSet<IDirFileModel>>> futureFModels  = new ArrayList<>();
             for(String str: incLst) {
                 ICmdService  cmd = CmdFactory.getCmdService("");
@@ -106,12 +138,15 @@ public class BaseAppController extends Thread{
                 );
             };
 
+            // хотя спорный момент что не нужно именно завершение в определенном порядке
+            // ведь дереву требуется время для балансировки
             List<Future<TreeSet<IDirFileModel>>> futureProcessed = new ArrayList<>(futureFModels.size());
 
             // не предусмотрен защитный механизм выхода
             while(true) {
 
                 // как только поток выполнился, забираем его данные
+                // и больше его не трогаем
                 for (Future<TreeSet<IDirFileModel>> fut : futureFModels) {
                     if(futureProcessed.contains(fut)) continue;
                     try {
@@ -131,15 +166,14 @@ public class BaseAppController extends Thread{
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                // списки идентичны, значит все обработано
                 if(futureFModels.equals(futureProcessed))break;
             };
                 // выводим данные в зависимости от resultSvc в виде определенном resultFormatter
-            for(IDirFileModel fmodel:treeFiles)
+            for(IDirFileModel fmodel : treeFiles)
                 resultSvc.appendToResult(String.format(resultFormatter.getFormatter(), fmodel.getName(), fmodel.getDate(), fmodel.getSize()));
             resultSvc.closeResult();
             threadPool.shutdown();
-            System.out.println("result closed");
-
         };
     }
 }

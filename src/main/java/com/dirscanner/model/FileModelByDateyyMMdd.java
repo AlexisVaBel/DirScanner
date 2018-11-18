@@ -16,7 +16,7 @@ public class FileModelByDateyyMMdd implements IDirFileModel {
     public FileModelByDateyyMMdd(String fName, long dt , String fSize){
         // конкретна модель отличается способом представления данных о файле
         // в том числе форматированием
-        // поэтому добавляем его в статик
+        // поэтому добавляем его в статик, а можно форматер установить в конструкторе.
         this.formatter= new SimpleDateFormat("yyyy.MM.dd");
         this.fileName = fName;
         this.fileDate = formatter.format(dt);
@@ -40,7 +40,7 @@ public class FileModelByDateyyMMdd implements IDirFileModel {
 
     @Override
     public int compareTo(IDirFileModel that) {
-        // сортируем все по одному принципу
+        // сортируем лексикографически или просто по длине?? пока первое
         if(that == null) return 1;
         if(this == that) return 0;
         return (this.getName().compareTo(that.getName()));
