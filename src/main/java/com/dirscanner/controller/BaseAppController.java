@@ -17,13 +17,6 @@ import java.util.concurrent.*;
  * Created by Belyaev Alexei (lebllex) on 14.11.18.
  */
 public class BaseAppController extends Thread{
-    // параметры команд
-    private static final String CMD_EXCL = "-";
-    private static final String CMD_FOUTNAME = "-FN";
-    private static final String CMD_SVCNAME = "-SVC";
-    private static final String CMD_FRMTNAME = "-FMRT";
-
-    //~ параметры команд
 
     // по сути неважно в каком порядке обрабатывать список
     // главное чтобы он был вообще был обработан
@@ -62,57 +55,29 @@ public class BaseAppController extends Thread{
 
     private boolean makeIncsExcls(){
         boolean bFlagExcl = false;
-        boolean bFileName = false;
-        boolean bSvcName  = false;
-        boolean bFrmtName = false;
-        String fileName = "";
-        String svcName = "";
-        String frmtName = "";
-        
+
         CmdArgsOptions argOptions = new CmdArgsOptions();
-        // лапша из параметров и их обработки, можно было бы поиграть с Options от  Appache
-        // но appache не java se и не junit - значит нельзя
+        String strCmdExcl = argOptions.getExclCmd();
+        String strPrev = "";
+
+
         for(String str: lstCmds){
-            if(bFileName){
-                fileName  = str;
-                bFileName = false;
-                continue;
-            };
-            if(bSvcName){
-                svcName  = str;
-                bSvcName = false;
-                continue;
-            }
-            if(bFrmtName){
-                frmtName  = str;
-                bFrmtName = false;
-                continue;
-            }
-            if(str.equals(CMD_EXCL)){
+            if(strPrev.contains("-") && strPrev.length()>1)argOptions.setKeyMap(strPrev,str);
+            strPrev = str;
+            if(str.equals(strCmdExcl)){
                 bFlagExcl=true;
                 continue;
             };
-            if(str.equals(CMD_FOUTNAME)){
-                bFileName = true;
-                continue;
-            }
-            if(str.equals(CMD_SVCNAME)){
-                bSvcName = true;
-                continue;
-            }
-            if(str.equals(CMD_FRMTNAME)){
-                bFrmtName = true;
-                continue;
-            }
+
             if(bFlagExcl){
                 if(!incLst.remove(str))excLst.add(str); // если нет данного элемента в incl, вероятно excl элемент может быть сабдиром
             }
             else if(!incLst.contains(str)) incLst.add(str); // избавимся от повторов, могут случайно быть набраны
         }
         // реализации по умолчанию, в парамертах предполагается указние иного (вывод в терминал, другой форматировщик)
-        this.resultSvc = ResultFactory.getResultService(svcName,new String[]{fileName,"UTF-8"});
+        this.resultSvc = ResultFactory.getResultService(argOptions.getSvc(),new String[]{argOptions.getOutFname(),"UTF-8"});
 
-        this.resultFormatter = OutFormatterFactory.getFormatter(frmtName);
+        this.resultFormatter = OutFormatterFactory.getFormatter(argOptions.getOutFormatter());
 
         return (!incLst.isEmpty() && resultSvc !=null && resultFormatter != null); // без excl работать можно
     };
