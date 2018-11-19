@@ -1,0 +1,13 @@
+Dirscanner:
+
+Java version - 8:
+Maven for build - 
+
+1)Build:
+    a)Linux:
+        for making jar use run make_package.sh
+        for starting tests use run make_tests.sh
+    b)Windows:
+
+
+Usage: java -jar *name*.jar /dir/toInclude ... - /dir/toExclude filenameExclude (optional -FN outputfilename)

@@ -37,7 +37,6 @@
                             <mainClass>com.dirscanner.Main</mainClass>
                         </manifest>
                     </archive>
-                    <finalName>${project.name}</finalName>
                 </configuration>
                 <executions>
                     <execution>

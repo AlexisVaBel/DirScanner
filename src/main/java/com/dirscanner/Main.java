@@ -19,6 +19,8 @@ public class Main {
             System.out.println("not enough actual parameters");
             System.out.println("use  /path1/toDir to include");
             System.out.println("use -/path2/toDir to exclude");
+            System.out.println("example:");
+            System.out.println("java -jar thisAppName-with-dependencies.jar /opt/atol /opt/cmake //someNetworkPath - /opt/cmake/Help");
         }else {
             System.out.println("starting process");
             long curTime = System.currentTimeMillis();

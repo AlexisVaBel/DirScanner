@@ -90,7 +90,7 @@ public class BaseAppController extends Thread{
             ExecutorService threadPool = Executors.newFixedThreadPool(iThrCnt);
 
 
-            // список объектов, что вернут нам свое дерево файлов
+            // список объектов, что вернут нам свои деревья файлов
             List<Future<TreeSet<IDirFileModel>>> futureFModels  = new ArrayList<>();
             for(String str: incLst) {
                 ICmdService  cmd = CmdFactory.getCmdService("");
