@@ -1,4 +1,4 @@
-Dirscanner:
+Dirscanner: plain java app, to make files tree of some defined directories with filter list
 
 Java version - 8:
 Maven for build - 
